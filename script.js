@@ -103,13 +103,34 @@ let simIntervalId = null;
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
-    loadData();
-    initializeUI();
-    startHeartbeat();
-    
-    // Create Lucide Icons
-    if (window.lucide) {
-        window.lucide.createIcons();
+    try {
+        loadData();
+        initializeUI();
+        startHeartbeat();
+        
+        // Create Lucide Icons
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+    } catch (err) {
+        console.error("Fatal initialization error. Force resetting settings to defaults...", err);
+        // Force reset corrupted localStorage data
+        safeStorage.removeItem('smart_timetable');
+        safeStorage.removeItem('smart_timetable_settings');
+        
+        appData.timetable = JSON.parse(JSON.stringify(PRESET_SUBJECTS));
+        appData.settings = JSON.parse(JSON.stringify(DEFAULT_TIMETABLE_METADATA));
+        saveData();
+        
+        try {
+            initializeUI();
+            startHeartbeat();
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        } catch (retryErr) {
+            console.error("Retry failed:", retryErr);
+        }
     }
 });
 
@@ -128,17 +149,26 @@ function loadData() {
             const parsedTimetable = JSON.parse(savedTimetable);
             const parsedSettings = JSON.parse(savedSettings);
 
-            // Detailed validation to ensure all periods and lunch keys exist
+            // Detailed validation to ensure all periods exist and have start/end string times
+            let validPeriods = true;
+            if (parsedSettings && parsedSettings.periods) {
+                for (let p = 1; p <= 7; p++) {
+                    if (!parsedSettings.periods[p] || 
+                        typeof parsedSettings.periods[p].start !== 'string' || 
+                        typeof parsedSettings.periods[p].end !== 'string') {
+                        validPeriods = false;
+                        break;
+                    }
+                }
+            } else {
+                validPeriods = false;
+            }
+
             if (parsedTimetable && parsedSettings && 
-                parsedSettings.periods && 
-                parsedSettings.periods[1] && 
-                parsedSettings.periods[2] && 
-                parsedSettings.periods[3] && 
-                parsedSettings.periods[4] && 
-                parsedSettings.periods[5] && 
-                parsedSettings.periods[6] && 
-                parsedSettings.periods[7] && 
-                parsedSettings.lunch) {
+                validPeriods && 
+                parsedSettings.lunch && 
+                typeof parsedSettings.lunch.start === 'string' && 
+                typeof parsedSettings.lunch.end === 'string') {
                 
                 appData.timetable = parsedTimetable;
                 appData.settings = parsedSettings;
