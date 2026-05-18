@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⏰ 스마트 알리미 | 실시간 학교 시간표</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background Decor -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-logo">
+                <div class="logo-icon-wrapper">
+                    <i data-lucide="clock" class="logo-icon animate-pulse"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>스마트 알리미</h1>
+                    <p>내 손안의 다음 교시 비서</p>
+                </div>
+            </div>
+            
+            <div class="header-controls">
+                <div class="real-time-display">
+                    <span id="header-date">2026년 5월 18일 (월)</span>
+                    <span id="header-time" class="time-digit">19:05:00</span>
+                </div>
+                
+                <div class="btn-group">
+                    <button id="btn-simulator-toggle" class="btn btn-icon btn-secondary" title="시간 시뮬레이터">
+                        <i data-lucide="terminal"></i>
+                    </button>
+                    <button id="btn-settings" class="btn btn-icon btn-secondary" title="설정">
+                        <i data-lucide="settings"></i>
+                    </button>
+                    <button id="btn-theme-toggle" class="btn btn-icon btn-secondary" title="테마 전환">
+                        <i data-lucide="sun" class="theme-icon-light"></i>
+                        <i data-lucide="moon" class="theme-icon-dark"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Simulator Bar (Collapsible) -->
+        <div id="simulator-bar" class="simulator-bar hidden">
+            <div class="simulator-inner">
+                <div class="sim-title">
+                    <i data-lucide="test-tube-2"></i>
+                    <span>테스트 시간 시뮬레이터</span>
+                </div>
+                <div class="sim-controls">
+                    <div class="sim-input-group">
+                        <label for="sim-day">요일</label>
+                        <select id="sim-day">
+                            <option value="1">월요일</option>
+                            <option value="2">화요일</option>
+                            <option value="3">수요일</option>
+                            <option value="4">목요일</option>
+                            <option value="5">금요일</option>
+                            <option value="6">토요일</option>
+                            <option value="0">일요일</option>
+                        </select>
+                    </div>
+                    <div class="sim-input-group">
+                        <label for="sim-time">시간</label>
+                        <input type="time" id="sim-time" step="1" value="09:00:00">
+                    </div>
+                    <div class="sim-btn-group">
+                        <button id="btn-sim-play" class="btn btn-sm btn-primary">
+                            <i data-lucide="play" class="sim-play-icon"></i>
+                            <span id="sim-play-text">시뮬레이션 시작</span>
+                        </button>
+                        <button id="btn-sim-reset" class="btn btn-sm btn-outline">
+                            <i data-lucide="rotate-ccw"></i>
+                            <span>실제 시간으로</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="sim-badge">
+                    <span>SIMULATOR ACTIVE</span>
+                </div>
+            </div>
+        </div>
+
+        <main class="app-main">
+            <!-- Left Panel: Dashboard & Today's Timeline -->
+            <section class="main-left">
+                <!-- What's Next Dashboard Card -->
+                <div class="card dashboard-card">
+                    <div class="dashboard-status-header">
+                        <span id="current-status-badge" class="status-badge status-loading">상태 분석 중</span>
+                        <div class="live-pulse"></div>
+                    </div>
+
+                    <div class="dashboard-body">
+                        <div class="timer-section">
+                            <div class="circular-progress-container">
+                                <svg class="progress-ring" width="160" height="160">
+                                    <circle class="progress-ring-bg" stroke="rgba(255,255,255,0.06)" stroke-width="8" fill="transparent" r="70" cx="80" cy="80" />
+                                    <circle id="progress-ring-bar" class="progress-ring-bar" stroke="var(--primary-color)" stroke-width="8" fill="transparent" r="70" cx="80" cy="80" />
+                                </svg>
+                                <div class="timer-text-container">
+                                    <span id="countdown-label">남은 시간</span>
+                                    <span id="countdown-timer" class="time-digit">00:00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="status-info-section">
+                            <!-- Current Class -->
+                            <div class="status-class-box current-box">
+                                <div class="class-label">
+                                    <i data-lucide="book-open"></i>
+                                    <span>현재 교시</span>
+                                </div>
+                                <div id="current-class-name" class="class-name">로딩 중...</div>
+                                <div class="class-meta">
+                                    <span id="current-class-room"><i data-lucide="map-pin"></i> -</span>
+                                    <span id="current-class-teacher"><i data-lucide="user"></i> -</span>
+                                </div>
+                            </div>
+
+                            <!-- Arrow Decor -->
+                            <div class="transition-arrow">
+                                <i data-lucide="arrow-down"></i>
+                            </div>
+
+                            <!-- Next Class -->
+                            <div class="status-class-box next-box">
+                                <div class="class-label">
+                                    <i data-lucide="chevrons-right"></i>
+                                    <span>다음 교시</span>
+                                </div>
+                                <div id="next-class-name" class="class-name">로딩 중...</div>
+                                <div class="class-meta">
+                                    <span id="next-class-room"><i data-lucide="map-pin"></i> -</span>
+                                    <span id="next-class-teacher"><i data-lucide="user"></i> -</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Today's Timeline Card -->
+                <div class="card timeline-card">
+                    <div class="card-header">
+                        <h2><i data-lucide="calendar-days"></i>오늘의 일정 (Timeline)</h2>
+                        <span id="today-timeline-date" class="date-subtext">월요일 수업</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="today-timeline-list" class="timeline-list">
+                            <!-- Populated by JavaScript -->
+                            <div class="timeline-empty">시간표를 불러오는 중입니다...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Weekly Timetable Grid -->
+            <section class="main-right">
+                <div class="card timetable-card-main">
+                    <div class="card-header flex-header">
+                        <div>
+                            <h2><i data-lucide="table"></i>주간 시간표 (Weekly)</h2>
+                            <p class="card-subtitle">과목 카드를 클릭하여 자유롭게 수정해 보세요.</p>
+                        </div>
+                        <button id="btn-quick-fill" class="btn btn-sm btn-outline">
+                            <i data-lucide="sparkles"></i>
+                            <span>샘플 채우기</span>
+                        </button>
+                    </div>
+                    <div class="card-body overflow-x">
+                        <table class="timetable-grid">
+                            <thead>
+                                <tr>
+                                    <th>교시</th>
+                                    <th>월</th>
+                                    <th>화</th>
+                                    <th>수</th>
+                                    <th>목</th>
+                                    <th>금</th>
+                                </tr>
+                            </thead>
+                            <tbody id="timetable-tbody">
+                                <!-- Populated dynamically by JS for 7 periods -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal: Edit Timetable Cell -->
+    <div id="modal-edit-cell" class="modal">
+        <div class="modal-content glassmorphism">
+            <div class="modal-header">
+                <h3><i data-lucide="edit-3"></i>시간표 수정</h3>
+                <button class="modal-close btn-close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="form-edit-cell">
+                <input type="hidden" id="edit-day">
+                <input type="hidden" id="edit-period">
+                
+                <div class="modal-body">
+                    <div class="edit-cell-info-badge">
+                        <span id="edit-cell-title-badge">월요일 1교시</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-subject">과목명</label>
+                        <input type="text" id="input-subject" placeholder="예: 수학, 영어, 동아리 등" required autocomplete="off">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="input-room">교실 위치</label>
+                            <input type="text" id="input-room" placeholder="예: 3-2반, 음악실" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="input-teacher">교사명</label>
+                            <input type="text" id="input-teacher" placeholder="예: 홍길동 선생님" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>카드 테마 색상</label>
+                        <div class="color-picker-grid">
+                            <label class="color-chip-wrapper">
+                                <input type="radio" name="cell-color" value="theme-blue" checked>
+                                <span class="color-chip chip-blue" style="background-color: hsl(210, 80%, 45%);"></span>
+                            </label>
+                            <label class="color-chip-wrapper">
+                                <input type="radio" name="cell-color" value="theme-purple">
+                                <span class="color-chip chip-purple" style="background-color: hsl(270, 75%, 50%);"></span>
+                            </label>
+                            <label class="color-chip-wrapper">
+                                <input type="radio" name="cell-color" value="theme-emerald">
+                                <span class="color-chip chip-emerald" style="background-color: hsl(150, 70%, 40%);"></span>
+                            </label>
+                            <label class="color-chip-wrapper">
+                                <input type="radio" name="cell-color" value="theme-coral">
+                                <span class="color-chip chip-coral" style="background-color: hsl(10, 80%, 55%);"></span>
+                            </label>
+                            <label class="color-chip-wrapper">
+                                <input type="radio" name="cell-color" value="theme-sunset">
+                                <span class="color-chip chip-sunset" style="background-color: hsl(30, 85%, 50%);"></span>
+                            </label>
+                            <label class="color-chip-wrapper">
+                                <input type="radio" name="cell-color" value="theme-amber">
+                                <span class="color-chip chip-amber" style="background-color: hsl(45, 85%, 48%);"></span>
+                            </label>
+                            <label class="color-chip-wrapper">
+                                <input type="radio" name="cell-color" value="theme-pink">
+                                <span class="color-chip chip-pink" style="background-color: hsl(330, 80%, 55%);"></span>
+                            </label>
+                            <label class="color-chip-wrapper">
+                                <input type="radio" name="cell-color" value="theme-slate">
+                                <span class="color-chip chip-slate" style="background-color: hsl(200, 15%, 50%);"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btn-delete-cell" class="btn btn-outline btn-danger">
+                        <i data-lucide="trash-2"></i> 비우기
+                    </button>
+                    <div class="footer-right">
+                        <button type="button" class="btn btn-outline btn-close-modal">취소</button>
+                        <button type="submit" class="btn btn-primary">저장하기</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Settings (Schedule & Timings) -->
+    <div id="modal-settings" class="modal">
+        <div class="modal-content glassmorphism modal-lg">
+            <div class="modal-header">
+                <h3><i data-lucide="sliders-horizontal"></i>일과 시간표 상세 설정</h3>
+                <button class="modal-close btn-close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="form-settings">
+                <div class="modal-body max-height-modal">
+                    <p class="form-desc-info">
+                        학교에 맞게 교시별 시작 및 종료 시간과 점심 시간을 커스터마이징하세요. 실시간 타이머 연산에 반영됩니다.
+                    </p>
+                    
+                    <div class="settings-grid">
+                        <div class="settings-left-col">
+                            <h4><i data-lucide="alarm-clock"></i>교시별 시간 설정</h4>
+                            <div id="period-settings-container" class="period-settings-list">
+                                <!-- Populated dynamically by JS -->
+                            </div>
+                        </div>
+                        <div class="settings-right-col">
+                            <h4><i data-lucide="sandwich"></i>기타 일과 시간 설정</h4>
+                            <div class="form-group">
+                                <label for="setting-lunch-start">점심시간 시작</label>
+                                <div class="time-range-row">
+                                    <input type="time" id="setting-lunch-start" required>
+                                    <span>~</span>
+                                    <input type="time" id="setting-lunch-end" required>
+                                </div>
+                            </div>
+                            <div class="form-group card-styled-group">
+                                <label><i data-lucide="sparkles"></i>데이터 백업 및 초기화</label>
+                                <div class="settings-action-buttons">
+                                    <button type="button" id="btn-export-data" class="btn btn-sm btn-outline">
+                                        <i data-lucide="download"></i> 내보내기
+                                    </button>
+                                    <button type="button" id="btn-import-data" class="btn btn-sm btn-outline">
+                                        <i data-lucide="upload"></i> 가져오기
+                                    </button>
+                                </div>
+                                <button type="button" id="btn-reset-all" class="btn btn-sm btn-outline btn-danger-full mt-2">
+                                    <i data-lucide="trash-2"></i> 모든 데이터 초기화
+                                </button>
+                                <input type="file" id="file-import-data" style="display: none;" accept=".json">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <span class="save-status-msg" id="settings-save-msg"></span>
+                    <div class="footer-right">
+                        <button type="button" class="btn btn-outline btn-close-modal">취소</button>
+                        <button type="submit" class="btn btn-primary">적용하기</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
